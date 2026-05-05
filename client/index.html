@@ -451,7 +451,16 @@
   function getUserContext() {
     const query = new URLSearchParams(window.location.search);
     const tgUser = tg?.initDataUnsafe?.user;
-    const telegramId = Number(tgUser?.id || query.get('telegramId') || localStorage.getItem('telegramId') || 0);
+    let telegramId = Number(tgUser?.id || query.get('telegramId') || localStorage.getItem('telegramId') || 0);
+
+    if (!telegramId) {
+      const testId = prompt('Test mode: Nhập Telegram ID của bạn:');
+      if (testId) {
+        telegramId = Number(testId);
+        localStorage.setItem('telegramId', telegramId);
+      }
+    }
+
     const username = tgUser?.username || query.get('username') || localStorage.getItem('username') || '';
     const displayName = tgUser?.first_name || query.get('name') || localStorage.getItem('displayName') || username || `User ${telegramId || ''}`;
 
