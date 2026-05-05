@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: alxshop
+    runtime: node
+    region: singapore
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URL
+        sync: false
+      - key: BOT_TOKEN
+        sync: false
+      - key: ADMIN_ID
+        sync: false
+      - key: ADMIN_TOKEN
+        sync: false
+      - key: BANK_BIN
+        sync: false
+      - key: BANK_ACCOUNT
+        sync: false
+      - key: PORT
+        value: 3000

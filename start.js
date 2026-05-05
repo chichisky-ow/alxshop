@@ -1,0 +1,3 @@
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
+require('./server/server.js');

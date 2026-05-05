@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Admin — DigitalShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root{
+      --bg:#f5f4f0;
+      --surface:#ffffff;
+      --border:#e2e0d8;
+      --text:#1a1a18;
+      --muted:#8a8880;
+      --accent:#1a1a18;
+      --green:#16a34a;
+      --red:#dc2626;
+      --yellow:#d97706;
+      --blue:#2563eb;
+      --purple:#7c3aed;
+      --font-mono:'JetBrains Mono',monospace;
+      --font-body:'Outfit',sans-serif;
+      --r:8px;
+      --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.1);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{font-size:14px}
+    body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+
+    /* ── Sidebar ─────────────────────────────────── */
+    .sidebar{
+      width:220px;flex-shrink:0;
+      background:var(--text);
+      display:flex;flex-direction:column;
+      position:sticky;top:0;height:100vh;overflow-y:auto;
+    }
+    .sidebar-logo{
+      padding:24px 20px 20px;
+      font-family:var(--font-mono);font-size:1.1rem;font-weight:700;
+      color:#fff;letter-spacing:-1px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .sidebar-logo span{color:#a3e635}
+    .sidebar-nav{padding:12px 10px;flex:1}
+    .nav-group{margin-bottom:20px}
+    .nav-group-label{
+      font-size:.62rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;
+      color:rgba(255,255,255,.3);padding:0 10px;margin-bottom:6px;
+    }
+    .nav-link{
+      display:flex;align-items:center;gap:10px;
+      padding:9px 10px;border-radius:var(--r);
+      color:rgba(255,255,255,.6);cursor:pointer;
+      transition:all .15s;font-size:.88rem;font-weight:500;
+      border:none;background:none;width:100%;text-align:left;
+    }
+    .nav-link:hover{color:#fff;background:rgba(255,255,255,.07)}
+    .nav-link.active{color:#fff;background:rgba(255,255,255,.12)}
+    .nav-link .icon{font-size:1rem;width:20px;text-align:center}
+    .nav-badge{
+      margin-left:auto;background:#dc2626;color:#fff;
+      font-size:.6rem;font-weight:700;padding:2px 6px;border-radius:10px;
+      font-family:var(--font-mono);
+    }
+    .sidebar-footer{
+      padding:16px;border-top:1px solid rgba(255,255,255,.08);
+      font-size:.75rem;color:rgba(255,255,255,.3);font-family:var(--font-mono);
+    }
+
+    /* ── Main ────────────────────────────────────── */
+    .main{flex:1;overflow-x:hidden;min-width:0}
+
+    .topbar{
+      position:sticky;top:0;z-index:50;
+      background:rgba(245,244,240,.92);backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--border);
+      padding:0 28px;height:56px;
+      display:flex;align-items:center;justify-content:space-between;
+    }
+    .topbar-title{font-family:var(--font-mono);font-weight:700;font-size:.95rem}
+    .topbar-right{display:flex;align-items:center;gap:12px}
+    .token-input{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:var(--r);padding:6px 12px;
+      font-family:var(--font-mono);font-size:.78rem;color:var(--text);
+      width:200px;outline:none;
+    }
+    .token-input:focus{border-color:var(--accent)}
+    .connect-btn{
+      padding:7px 14px;background:var(--accent);border:none;
+      border-radius:var(--r);color:#fff;font-weight:600;font-size:.8rem;
+      cursor:pointer;transition:opacity .15s;font-family:var(--font-body);
+    }
+    .connect-btn:hover{opacity:.85}
+    .status-dot{
+      width:8px;height:8px;border-radius:50%;background:#dc2626;
+      transition:background .3s;
+    }
+    .status-dot.connected{background:#16a34a}
+
+    /* ── Page ────────────────────────────────────── */
+    .page{display:none;padding:28px;animation:fadeIn .2s ease}
+    .page.active{display:block}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+    .page-header{margin-bottom:24px}
+    .page-title{font-family:var(--font-mono);font-size:1.3rem;font-weight:700;margin-bottom:4px}
+    .page-sub{font-size:.85rem;color:var(--muted)}
+
+    /* ── Stat Cards ──────────────────────────────── */
+    .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+    .stat-card{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:var(--r);padding:20px;
+      box-shadow:var(--shadow);position:relative;overflow:hidden;
+    }
+    .stat-card::before{
+      content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    }
+    .stat-card.green::before{background:var(--green)}
+    .stat-card.blue::before{background:var(--blue)}
+    .stat-card.yellow::before{background:var(--yellow)}
+    .stat-card.purple::before{background:var(--purple)}
+    .stat-label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px}
+    .stat-value{font-family:var(--font-mono);font-size:1.5rem;font-weight:700;margin-bottom:4px}
+    .stat-change{font-size:.75rem;color:var(--muted)}
+    .stat-icon{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:2rem;opacity:.12}
+
+    /* ── Table ───────────────────────────────────── */
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px}
+    .card-header{
+      padding:16px 20px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;
+    }
+    .card-title{font-family:var(--font-mono);font-size:.9rem;font-weight:700}
+    .card-actions{display:flex;gap:8px;align-items:center}
+
+    .btn{
+      padding:7px 14px;border-radius:var(--r);font-size:.8rem;font-weight:600;
+      cursor:pointer;border:1px solid transparent;transition:all .15s;
+      font-family:var(--font-body);display:inline-flex;align-items:center;gap:6px;
+    }
+    .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .btn-primary:hover{opacity:.85}
+    .btn-outline{background:transparent;color:var(--text);border-color:var(--border)}
+    .btn-outline:hover{background:var(--bg)}
+    .btn-green{background:var(--green);color:#fff}
+    .btn-green:hover{opacity:.85}
+    .btn-red{background:var(--red);color:#fff}
+    .btn-red:hover{opacity:.85}
+    .btn-sm{padding:4px 10px;font-size:.75rem}
+
+    .table-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse}
+    thead th{
+      padding:10px 16px;text-align:left;font-size:.7rem;font-weight:700;
+      text-transform:uppercase;letter-spacing:1px;color:var(--muted);
+      background:var(--bg);border-bottom:1px solid var(--border);
+    }
+    tbody td{
+      padding:12px 16px;border-bottom:1px solid var(--border);
+      font-size:.85rem;vertical-align:middle;
+    }
+    tbody tr:last-child td{border-bottom:none}
+    tbody tr:hover{background:var(--bg)}
+
+    .mono{font-family:var(--font-mono);font-size:.8rem}
+    .tag{
+      display:inline-flex;align-items:center;gap:4px;
+      padding:3px 8px;border-radius:4px;font-size:.72rem;font-weight:600;
+      font-family:var(--font-mono);
+    }
+    .tag-green{background:#dcfce7;color:#15803d}
+    .tag-yellow{background:#fef9c3;color:#a16207}
+    .tag-red{background:#fee2e2;color:#b91c1c}
+    .tag-blue{background:#dbeafe;color:#1d4ed8}
+    .tag-gray{background:#f3f4f6;color:#4b5563}
+
+    /* ── Filters ─────────────────────────────────── */
+    .filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+    .search-input{
+      flex:1;min-width:200px;
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:var(--r);padding:8px 12px;
+      font-family:var(--font-body);font-size:.85rem;color:var(--text);outline:none;
+    }
+    .search-input:focus{border-color:var(--accent)}
+    .filter-select{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:var(--r);padding:8px 12px;
+      font-family:var(--font-body);font-size:.85rem;color:var(--text);outline:none;cursor:pointer;
+    }
+
+    /* ── Modal ───────────────────────────────────── */
+    .modal-bg{
+      position:fixed;inset:0;background:rgba(0,0,0,.5);
+      z-index:999;display:flex;align-items:center;justify-content:center;
+      opacity:0;pointer-events:none;transition:opacity .2s;padding:20px;
+    }
+    .modal-bg.open{opacity:1;pointer-events:all}
+    .modal-box{
+      background:var(--surface);border-radius:12px;
+      width:100%;max-width:480px;box-shadow:var(--shadow-lg);
+      transform:scale(.95);transition:transform .2s;
+      max-height:90vh;overflow-y:auto;
+    }
+    .modal-bg.open .modal-box{transform:scale(1)}
+    .modal-head{
+      padding:20px 24px 16px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;
+    }
+    .modal-title{font-family:var(--font-mono);font-weight:700;font-size:1rem}
+    .modal-close{
+      width:28px;height:28px;border-radius:50%;background:var(--bg);
+      border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;
+    }
+    .modal-body{padding:20px 24px}
+    .modal-foot{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+
+    /* ── Form ────────────────────────────────────── */
+    .form-group{margin-bottom:14px}
+    .form-label{display:block;font-size:.78rem;font-weight:600;margin-bottom:6px;color:var(--text)}
+    .form-input,.form-select,.form-textarea{
+      width:100%;background:var(--bg);border:1px solid var(--border);
+      border-radius:var(--r);padding:9px 12px;
+      font-family:var(--font-body);font-size:.88rem;color:var(--text);outline:none;
+      transition:border-color .15s;
+    }
+    .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);background:#fff}
+    .form-textarea{resize:vertical;min-height:80px;font-family:var(--font-mono);font-size:.78rem}
+    .form-hint{font-size:.72rem;color:var(--muted);margin-top:4px}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+    /* ── Toast ───────────────────────────────────── */
+    .toast-container{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+    .toast{
+      background:var(--text);color:#fff;padding:12px 16px;border-radius:var(--r);
+      font-size:.82rem;font-weight:500;box-shadow:var(--shadow-lg);
+      display:flex;align-items:center;gap:8px;min-width:240px;
+      animation:slideIn .25s ease;
+    }
+    .toast.success{border-left:3px solid var(--green)}
+    .toast.error{border-left:3px solid var(--red)}
+    .toast.info{border-left:3px solid var(--blue)}
+    @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+    /* ── Empty ───────────────────────────────────── */
+    .empty-row td{text-align:center;padding:40px;color:var(--muted);font-size:.88rem}
+
+    /* ── Pagination ──────────────────────────────── */
+    .pagination{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--border)}
+    .page-info{font-size:.78rem;color:var(--muted);font-family:var(--font-mono)}
+    .page-btns{display:flex;gap:4px}
+    .page-btn{
+      padding:5px 10px;border:1px solid var(--border);border-radius:var(--r);
+      background:var(--surface);cursor:pointer;font-size:.78rem;
+      transition:all .15s;font-family:var(--font-mono);
+    }
+    .page-btn:hover{background:var(--bg)}
+    .page-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .page-btn:disabled{opacity:.4;cursor:not-allowed}
+
+    /* ── Charts placeholder ──────────────────────── */
+    .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+    .chart-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--shadow)}
+    .chart-title{font-family:var(--font-mono);font-size:.85rem;font-weight:700;margin-bottom:16px}
+    .bar-chart{display:flex;align-items:flex-end;gap:6px;height:100px}
+    .bar-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+    .bar{border-radius:4px 4px 0 0;background:var(--accent);opacity:.8;transition:opacity .2s;cursor:pointer;min-width:8px}
+    .bar:hover{opacity:1}
+    .bar-label{font-size:.6rem;color:var(--muted);font-family:var(--font-mono)}
+
+    /* ── Loading ─────────────────────────────────── */
+    .skeleton{background:linear-gradient(90deg,#f0efe9 25%,#e8e7e1 50%,#f0efe9 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:4px}
+    @keyframes shimmer{to{background-position:-200% 0}}
+    .sk-row{height:44px;margin-bottom:1px}
+  </style>
+</head>
+<body>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ── Sidebar ─────────────────────────────────────────── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">Digital<span>Shop</span><br><span style="font-size:.6rem;opacity:.4;font-weight:400">ADMIN v1.0</span></div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-group">
+      <div class="nav-group-label">Tổng quan</div>
+      <button class="nav-link active" data-page="dashboard"><span class="icon">📊</span> Dashboard</button>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Bán hàng</div>
+      <button class="nav-link" data-page="orders"><span class="icon">📦</span> Đơn hàng <span class="nav-badge" id="pendingBadge">0</span></button>
+      <button class="nav-link" data-page="products"><span class="icon">🏷️</span> Sản phẩm</button>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Marketing</div>
+      <button class="nav-link" data-page="discounts"><span class="icon">🎟️</span> Mã giảm giá</button>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    API: <span id="serverUrl" style="color:#a3e635">localhost:3000</span>
+  </div>
+</aside>
+
+<!-- ── Main ────────────────────────────────────────────── -->
+<main class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-title" id="topbarTitle">Dashboard</div>
+    <div class="topbar-right">
+      <input class="token-input" id="tokenInput" type="password" placeholder="Admin token..." />
+      <button class="connect-btn" onclick="connect()">Kết nối</button>
+      <div class="status-dot" id="statusDot" title="Chưa kết nối"></div>
+    </div>
+  </div>
+
+  <!-- ── DASHBOARD ── -->
+  <div class="page active" id="pageDashboard">
+    <div style="padding:28px">
+      <div class="page-header">
+        <div class="page-title">Dashboard</div>
+        <div class="page-sub">Tổng quan hệ thống DigitalShop</div>
+      </div>
+
+      <div class="stat-grid" id="statGrid">
+        <div class="stat-card green">
+          <div class="stat-label">Doanh thu</div>
+          <div class="stat-value" id="sRevenue">—</div>
+          <div class="stat-change">Tổng đơn hoàn thành</div>
+          <div class="stat-icon">💰</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">Đơn hàng</div>
+          <div class="stat-value" id="sOrders">—</div>
+          <div class="stat-change" id="sPending">— đơn đang chờ</div>
+          <div class="stat-icon">📦</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-label">Sản phẩm</div>
+          <div class="stat-value" id="sProducts">—</div>
+          <div class="stat-change" id="sOutStock">— hết hàng</div>
+          <div class="stat-icon">🏷️</div>
+        </div>
+      </div>
+
+      <div class="chart-grid">
+        <div class="chart-box">
+          <div class="chart-title">Doanh thu 7 ngày</div>
+          <div class="bar-chart" id="revenueChart">
+            <div style="color:var(--muted);font-size:.8rem;margin:auto">Kết nối để xem dữ liệu</div>
+          </div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title">Đơn hàng theo trạng thái</div>
+          <div id="statusChart" style="display:flex;flex-direction:column;gap:8px">
+            <div style="color:var(--muted);font-size:.8rem">Kết nối để xem dữ liệu</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent orders -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Đơn hàng gần đây</div>
+          <button class="btn btn-outline btn-sm" onclick="switchPage('orders')">Xem tất cả →</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Sản phẩm</th><th>Tổng tiền</th><th>Trạng thái</th><th>Thời gian</th></tr></thead>
+            <tbody id="recentOrders"><tr class="empty-row"><td colspan="6">Kết nối để tải dữ liệu</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ORDERS ── -->
+  <div class="page" id="pageOrders">
+    <div style="padding:28px">
+      <div class="page-header">
+        <div class="page-title">Đơn hàng</div>
+        <div class="page-sub">Quản lý và xác nhận thanh toán</div>
+      </div>
+
+      <div class="filters">
+        <input class="search-input" id="orderSearch" type="text" placeholder="🔍 Tìm mã đơn, username..." oninput="filterOrders()"/>
+        <select class="filter-select" id="orderStatus" onchange="filterOrders()">
+          <option value="">Tất cả trạng thái</option>
+          <option value="waiting_payment">Chờ thanh toán</option>
+          <option value="paid">Đã thanh toán</option>
+          <option value="completed">Hoàn thành</option>
+          <option value="cancelled">Đã huỷ</option>
+        </select>
+        <button class="btn btn-outline" onclick="loadOrders()">🔄 Làm mới</button>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Sản phẩm</th><th>Tổng tiền</th><th>Trạng thái</th><th>Thời gian</th><th>Thao tác</th></tr></thead>
+            <tbody id="ordersTable"><tr class="empty-row"><td colspan="7">Đang tải...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <div class="page-info" id="orderPageInfo">—</div>
+          <div class="page-btns" id="orderPagination"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PRODUCTS ── -->
+  <div class="page" id="pageProducts">
+    <div style="padding:28px">
+      <div class="page-header">
+        <div class="page-title">Sản phẩm</div>
+        <div class="page-sub">Quản lý kho hàng và nội dung tự động</div>
+      </div>
+
+      <div class="filters">
+        <input class="search-input" id="productSearch" type="text" placeholder="🔍 Tìm sản phẩm..." oninput="filterProducts()"/>
+        <select class="filter-select" id="productCat" onchange="filterProducts()">
+          <option value="">Tất cả danh mục</option>
+          <option value="software">Phần mềm</option>
+          <option value="game">Game</option>
+          <option value="account">Tài khoản</option>
+          <option value="other">Khác</option>
+        </select>
+        <button class="btn btn-primary" onclick="openAddProduct()">+ Thêm sản phẩm</button>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Sản phẩm</th><th>Danh mục</th><th>Giá</th><th>Tồn kho</th><th>Đã bán</th><th>Giao hàng</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+            <tbody id="productsTable"><tr class="empty-row"><td colspan="8">Đang tải...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DISCOUNTS ── -->
+  <div class="page" id="pageDiscounts">
+    <div style="padding:28px">
+      <div class="page-header">
+        <div class="page-title">Mã giảm giá</div>
+        <div class="page-sub">Tạo và quản lý chương trình khuyến mãi</div>
+      </div>
+
+      <div class="filters">
+        <input class="search-input" id="discountSearch" type="text" placeholder="🔍 Tìm mã..." oninput="filterDiscounts()"/>
+        <button class="btn btn-primary" onclick="openAddDiscount()">+ Tạo mã mới</button>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Mã</th><th>Loại</th><th>Giá trị</th><th>Đã dùng / Giới hạn</th><th>Giảm tối đa</th><th>Hết hạn</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+            <tbody id="discountsTable"><tr class="empty-row"><td colspan="8">Đang tải...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── MODALS ─────────────────────────────────────────── -->
+
+<!-- Confirm payment -->
+<div class="modal-bg" id="modalConfirm">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">💳 Xác nhận thanh toán</div>
+      <button class="modal-close" onclick="closeModal('modalConfirm')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Mã đơn hàng</label>
+        <input class="form-input mono" id="confirmOrderId" readonly/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Số tiền thực nhận (đ)</label>
+        <input class="form-input" id="confirmAmount" type="number" placeholder="Nhập số tiền thực nhận..."/>
+        <div class="form-hint">Hệ thống sẽ tự động giao hàng sau khi xác nhận</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('modalConfirm')">Huỷ</button>
+      <button class="btn btn-green" onclick="confirmPayment()">✅ Xác nhận & Giao hàng</button>
+    </div>
+  </div>
+</div>
+
+<!-- Manual deliver -->
+<div class="modal-bg" id="modalDeliver">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">📦 Giao hàng thủ công</div>
+      <button class="modal-close" onclick="closeModal('modalDeliver')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Mã đơn hàng</label>
+        <input class="form-input mono" id="deliverOrderId" readonly/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nội dung giao (key/link/tài khoản)</label>
+        <textarea class="form-textarea" id="deliverContent" placeholder="Nhập nội dung cần giao cho khách..."></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('modalDeliver')">Huỷ</button>
+      <button class="btn btn-primary" onclick="manualDeliver()">📤 Giao ngay</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add stock -->
+<div class="modal-bg" id="modalAddStock">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">📥 Nhập kho</div>
+      <button class="modal-close" onclick="closeModal('modalAddStock')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Sản phẩm</label>
+        <input class="form-input" id="stockProductName" readonly/>
+        <input type="hidden" id="stockProductId"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Danh sách key/link/tài khoản</label>
+        <textarea class="form-textarea" id="stockContent" placeholder="Mỗi dòng 1 key&#10;KEY-XXXX-YYYY&#10;KEY-AAAA-BBBB" style="min-height:120px"></textarea>
+        <div class="form-hint">Mỗi dòng 1 key — hệ thống sẽ tự đếm số lượng</div>
+      </div>
+      <div id="stockCount" style="font-family:var(--font-mono);font-size:.8rem;color:var(--muted)"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('modalAddStock')">Huỷ</button>
+      <button class="btn btn-green" onclick="addStock()">✅ Nhập kho</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add product -->
+<div class="modal-bg" id="modalAddProduct">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">➕ Thêm sản phẩm</div>
+      <button class="modal-close" onclick="closeModal('modalAddProduct')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tên sản phẩm</label>
+          <input class="form-input" id="newProductName" placeholder="Windows 11 Pro..."/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Icon (emoji)</label>
+          <input class="form-input" id="newProductIcon" placeholder="🪟" maxlength="2"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Giá (đ)</label>
+          <input class="form-input" id="newProductPrice" type="number" placeholder="150000"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Danh mục</label>
+          <select class="form-select" id="newProductCat">
+            <option value="software">Phần mềm</option>
+            <option value="game">Game</option>
+            <option value="account">Tài khoản</option>
+            <option value="other">Khác</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mô tả</label>
+        <textarea class="form-textarea" id="newProductDesc" placeholder="Mô tả sản phẩm..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">
+          <input type="checkbox" id="newProductAuto" checked style="margin-right:6px"/>
+          Giao hàng tự động
+        </label>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('modalAddProduct')">Huỷ</button>
+      <button class="btn btn-primary" onclick="addProduct()">➕ Tạo sản phẩm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add discount -->
+<div class="modal-bg" id="modalAddDiscount">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">🎟️ Tạo mã giảm giá</div>
+      <button class="modal-close" onclick="closeModal('modalAddDiscount')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Mã (tự động viết hoa)</label>
+          <input class="form-input mono" id="newDiscCode" placeholder="SUMMER30" oninput="this.value=this.value.toUpperCase()"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Loại</label>
+          <select class="form-select" id="newDiscType" onchange="toggleDiscValue()">
+            <option value="percent">Giảm theo %</option>
+            <option value="fixed">Giảm số tiền cố định</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" id="discValueLabel">Giá trị (%)</label>
+          <input class="form-input" id="newDiscValue" type="number" placeholder="30"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Giảm tối đa (đ)</label>
+          <input class="form-input" id="newDiscMax" type="number" placeholder="Không giới hạn"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Đơn tối thiểu (đ)</label>
+          <input class="form-input" id="newDiscMin" type="number" placeholder="0"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Giới hạn lượt dùng</label>
+          <input class="form-input" id="newDiscMaxUse" type="number" placeholder="Không giới hạn"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Hết hạn sau (ngày)</label>
+        <input class="form-input" id="newDiscDays" type="number" placeholder="Để trống = không hết hạn"/>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('modalAddDiscount')">Huỷ</button>
+      <button class="btn btn-primary" onclick="createDiscount()">🎟️ Tạo mã</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Config ─────────────────────────────────────────────────
+const SERVER = window.location.origin; // hoặc 'https://yourserver.com'
+let adminToken = '';
+let isConnected = false;
+
+// Data cache
+let allOrders    = [];
+let allProducts  = [];
+let allDiscounts = [];
+let orderPage    = 1;
+const PAGE_SIZE  = 15;
+
+// ── Connection ─────────────────────────────────────────────
+async function connect() {
+  adminToken = document.getElementById('tokenInput').value.trim();
+  if (!adminToken) { toast('Nhập admin token!', 'error'); return; }
+
+  try {
+    const res = await apiFetch('/api/stats');
+    if (!res.ok) throw new Error('Token sai!');
+
+    isConnected = true;
+    document.getElementById('statusDot').classList.add('connected');
+    document.getElementById('statusDot').title = 'Đã kết nối';
+    toast('✅ Kết nối thành công!', 'success');
+    loadDashboard();
+    loadOrders();
+    loadProducts();
+    loadDiscounts();
+  } catch (e) {
+    toast(e.message || 'Lỗi kết nối', 'error');
+  }
+}
+
+async function apiFetch(path, opts = {}) {
+  return fetch(SERVER + path, {
+    ...opts,
+    headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken, ...(opts.headers || {}) },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+}
+
+// ── Navigation ─────────────────────────────────────────────
+document.querySelectorAll('.nav-link[data-page]').forEach(el => {
+  el.addEventListener('click', () => switchPage(el.dataset.page));
+});
+
+function switchPage(page) {
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(`page${capitalize(page)}`).classList.add('active');
+  const titles = { dashboard:'Dashboard', orders:'Đơn hàng', products:'Sản phẩm', discounts:'Mã giảm giá' };
+  document.getElementById('topbarTitle').textContent = titles[page] || page;
+}
+
+// ── Dashboard ──────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const res  = await apiFetch('/api/stats');
+    const data = await res.json();
+    const rev  = data.revenue || {};
+
+    document.getElementById('sRevenue').textContent = fmt(rev.totalRevenue || 0);
+    document.getElementById('sOrders').textContent  = rev.totalOrders || 0;
+
+    const pending = allOrders.filter(o => o.status === 'waiting_payment').length;
+    document.getElementById('sPending').textContent = `${pending} đơn đang chờ`;
+    document.getElementById('pendingBadge').textContent = pending;
+
+    const outStock = allProducts.filter(p => p.stock <= 0).length;
+    document.getElementById('sProducts').textContent  = allProducts.length;
+    document.getElementById('sOutStock').textContent  = `${outStock} hết hàng`;
+
+    renderRecentOrders();
+    renderRevenueChart();
+    renderStatusChart();
+  } catch {}
+}
+
+function renderRecentOrders() {
+  const tbody = document.getElementById('recentOrders');
+  const recent = [...allOrders].slice(0, 10);
+  if (!recent.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Chưa có đơn hàng</td></tr>'; return; }
+  tbody.innerHTML = recent.map(o => `
+    <tr>
+      <td class="mono">${o.orderId}</td>
+      <td>@${o.username || '—'}</td>
+      <td>${o.items?.[0]?.productName || '—'}</td>
+      <td class="mono" style="color:var(--green)">${fmt(o.total)}</td>
+      <td>${statusTag(o.status)}</td>
+      <td style="color:var(--muted)">${fmtDate(o.createdAt)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderRevenueChart() {
+  const el = document.getElementById('revenueChart');
+  const last7 = getLast7Days();
+  const max = Math.max(...last7.map(d => d.val), 1);
+  el.innerHTML = last7.map(d => `
+    <div class="bar-item">
+      <div class="bar" style="height:${Math.max(4, (d.val/max)*80)}px" title="${fmt(d.val)}"></div>
+      <div class="bar-label">${d.label}</div>
+    </div>
+  `).join('');
+}
+
+function renderStatusChart() {
+  const el = document.getElementById('statusChart');
+  const statuses = ['waiting_payment','paid','completed','cancelled'];
+  const labels   = { waiting_payment:'Chờ TT', paid:'Đã TT', completed:'Hoàn thành', cancelled:'Huỷ' };
+  const colors   = { waiting_payment:'var(--yellow)', paid:'var(--blue)', completed:'var(--green)', cancelled:'var(--red)' };
+  const total    = allOrders.length || 1;
+
+  el.innerHTML = statuses.map(s => {
+    const count = allOrders.filter(o => o.status === s).length;
+    const pct   = Math.round(count / total * 100);
+    return `
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:4px">
+          <span>${labels[s]}</span>
+          <span class="mono">${count} (${pct}%)</span>
+        </div>
+        <div style="height:6px;background:var(--bg);border-radius:3px">
+          <div style="height:100%;width:${pct}%;background:${colors[s]};border-radius:3px;transition:width .5s"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── Orders ─────────────────────────────────────────────────
+async function loadOrders() {
+  try {
+    const res  = await apiFetch(`/api/orders?page=1&limit=200`);
+    const data = await res.json();
+    allOrders  = data.orders || [];
+    renderOrders();
+  } catch { renderOrders() }
+}
+
+function filterOrders() {
+  orderPage = 1;
+  renderOrders();
+}
+
+function renderOrders() {
+  const search = document.getElementById('orderSearch')?.value.toLowerCase() || '';
+  const status = document.getElementById('orderStatus')?.value || '';
+
+  let filtered = allOrders.filter(o => {
+    const matchSearch = !search || o.orderId?.toLowerCase().includes(search) || o.username?.toLowerCase().includes(search);
+    const matchStatus = !status || o.status === status;
+    return matchSearch && matchStatus;
+  });
+
+  const total = filtered.length;
+  const start = (orderPage - 1) * PAGE_SIZE;
+  const page  = filtered.slice(start, start + PAGE_SIZE);
+
+  const tbody = document.getElementById('ordersTable');
+  if (!page.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="7">Không có đơn hàng</td></tr>'; }
+  else {
+    tbody.innerHTML = page.map(o => `
+      <tr>
+        <td class="mono">${o.orderId}</td>
+        <td>@${o.username || '—'}<br><span style="color:var(--muted);font-size:.72rem">${o.telegramId}</span></td>
+        <td>${o.items?.map(i => i.productName).join(', ') || '—'}</td>
+        <td class="mono" style="color:var(--green)">${fmt(o.total)}</td>
+        <td>${statusTag(o.status)}</td>
+        <td style="color:var(--muted);font-size:.78rem">${fmtDate(o.createdAt)}</td>
+        <td>${orderActions(o)}</td>
+      </tr>
+    `).join('');
+  }
+
+  document.getElementById('orderPageInfo').textContent = `${start+1}–${Math.min(start+PAGE_SIZE, total)} / ${total} đơn`;
+  renderPagination(total, orderPage, (p) => { orderPage = p; renderOrders(); }, 'orderPagination');
+}
+
+function orderActions(o) {
+  if (o.status === 'waiting_payment') return `
+    <button class="btn btn-green btn-sm" onclick="openConfirm('${o.orderId}', ${o.total})">✅ XN</button>
+    <button class="btn btn-red btn-sm" onclick="cancelOrder('${o.orderId}')">❌</button>
+  `;
+  if (o.status === 'paid') return `
+    <button class="btn btn-primary btn-sm" onclick="openDeliver('${o.orderId}')">📤 Giao</button>
+  `;
+  return `<span style="color:var(--muted);font-size:.75rem">—</span>`;
+}
+
+function openConfirm(orderId, amount) {
+  document.getElementById('confirmOrderId').value = orderId;
+  document.getElementById('confirmAmount').value  = amount;
+  openModal('modalConfirm');
+}
+
+async function confirmPayment() {
+  const orderId = document.getElementById('confirmOrderId').value;
+  const amount  = Number(document.getElementById('confirmAmount').value);
+  try {
+    const res = await apiFetch(`/api/orders/${orderId}/confirm`, { method:'PATCH', body:{ amount } });
+    if (!res.ok) throw new Error('Lỗi xác nhận');
+    toast('✅ Đã xác nhận & giao hàng!', 'success');
+    closeModal('modalConfirm');
+    loadOrders(); loadDashboard();
+  } catch (e) { toast(e.message, 'error') }
+}
+
+function openDeliver(orderId) {
+  document.getElementById('deliverOrderId').value  = orderId;
+  document.getElementById('deliverContent').value  = '';
+  openModal('modalDeliver');
+}
+
+async function manualDeliver() {
+  const orderId = document.getElementById('deliverOrderId').value;
+  const content = document.getElementById('deliverContent').value.trim();
+  if (!content) { toast('Nhập nội dung cần giao!', 'error'); return; }
+  try {
+    const res = await apiFetch(`/api/orders/${orderId}/deliver`, { method:'PATCH', body:{ content } });
+    if (!res.ok) throw new Error('Lỗi giao hàng');
+    toast('📤 Đã giao hàng thủ công!', 'success');
+    closeModal('modalDeliver');
+    loadOrders();
+  } catch (e) { toast(e.message, 'error') }
+}
+
+async function cancelOrder(orderId) {
+  if (!confirm(`Huỷ đơn ${orderId}?`)) return;
+  try {
+    const res = await apiFetch(`/api/orders/${orderId}/cancel`, { method:'PATCH', body:{ note:'Admin huỷ' } });
+    if (!res.ok) throw new Error();
+    toast('❌ Đã huỷ đơn', 'info');
+    loadOrders();
+  } catch { toast('Lỗi huỷ đơn', 'error') }
+}
+
+// ── Products ───────────────────────────────────────────────
+async function loadProducts() {
+  try {
+    const res = await apiFetch('/api/products');
+    allProducts = await res.json();
+    renderProducts();
+  } catch { renderProducts() }
+}
+
+function filterProducts() { renderProducts(); }
+
+function renderProducts() {
+  const search = document.getElementById('productSearch')?.value.toLowerCase() || '';
+  const cat    = document.getElementById('productCat')?.value || '';
+  const filtered = allProducts.filter(p =>
+    (!search || p.name?.toLowerCase().includes(search)) &&
+    (!cat || p.category === cat)
+  );
+
+  const tbody = document.getElementById('productsTable');
+  if (!filtered.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="8">Không có sản phẩm</td></tr>'; return; }
+
+  tbody.innerHTML = filtered.map(p => `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:1.3rem">${p.icon || '📦'}</span>
+          <div>
+            <div style="font-weight:600">${p.name}</div>
+            <div style="font-size:.72rem;color:var(--muted)">${p._id}</div>
+          </div>
+        </div>
+      </td>
+      <td><span class="tag tag-gray">${CAT[p.category] || p.category}</span></td>
+      <td class="mono" style="color:var(--green)">${fmt(p.price)}</td>
+      <td>
+        <span class="mono" style="color:${p.stock <= 0 ? 'var(--red)' : p.stock <= 5 ? 'var(--yellow)' : 'var(--green)'}">${p.stock}</span>
+      </td>
+      <td class="mono">${p.totalSold || 0}</td>
+      <td>${p.autoDeliver ? '<span class="tag tag-blue">⚡ Tự động</span>' : '<span class="tag tag-gray">👤 Thủ công</span>'}</td>
+      <td>${p.isActive ? '<span class="tag tag-green">● Active</span>' : '<span class="tag tag-red">● Ẩn</span>'}</td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick="openAddStock('${p._id}', '${p.name}')">📥 Nhập kho</button>
+        <button class="btn btn-red btn-sm" onclick="toggleProduct('${p._id}', ${p.isActive})">${p.isActive ? 'Ẩn' : 'Hiện'}</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openAddProduct() { openModal('modalAddProduct') }
+
+async function addProduct() {
+  const body = {
+    name:        document.getElementById('newProductName').value.trim(),
+    icon:        document.getElementById('newProductIcon').value.trim(),
+    price:       Number(document.getElementById('newProductPrice').value),
+    category:    document.getElementById('newProductCat').value,
+    description: document.getElementById('newProductDesc').value.trim(),
+    autoDeliver: document.getElementById('newProductAuto').checked,
+  };
+  if (!body.name || !body.price) { toast('Điền đủ tên và giá!', 'error'); return; }
+  try {
+    const res = await apiFetch('/api/products', { method:'POST', body });
+    if (!res.ok) throw new Error();
+    toast('✅ Đã thêm sản phẩm!', 'success');
+    closeModal('modalAddProduct');
+    loadProducts();
+  } catch { toast('Lỗi thêm sản phẩm', 'error') }
+}
+
+function openAddStock(id, name) {
+  document.getElementById('stockProductId').value   = id;
+  document.getElementById('stockProductName').value = name;
+  document.getElementById('stockContent').value     = '';
+  document.getElementById('stockCount').textContent = '';
+  openModal('modalAddStock');
+}
+
+document.getElementById('stockContent')?.addEventListener('input', function() {
+  const keys = this.value.trim().split('\n').filter(k => k.trim());
+  document.getElementById('stockCount').textContent = keys.length ? `→ ${keys.length} key sẽ được nhập` : '';
+});
+
+async function addStock() {
+  const id   = document.getElementById('stockProductId').value;
+  const keys = document.getElementById('stockContent').value.trim().split('\n').map(k => k.trim()).filter(Boolean);
+  if (!keys.length) { toast('Nhập ít nhất 1 key!', 'error'); return; }
+  try {
+    const res = await apiFetch(`/api/products/${id}/stock`, { method:'POST', body:{ keys } });
+    if (!res.ok) throw new Error();
+    toast(`✅ Đã nhập ${keys.length} key!`, 'success');
+    closeModal('modalAddStock');
+    loadProducts();
+  } catch { toast('Lỗi nhập kho', 'error') }
+}
+
+async function toggleProduct(id, isActive) {
+  try {
+    await apiFetch(`/api/products/${id}`, { method:'PATCH', body:{ isActive: !isActive } });
+    toast(isActive ? '🙈 Đã ẩn sản phẩm' : '👁️ Đã hiện sản phẩm', 'info');
+    loadProducts();
+  } catch { toast('Lỗi cập nhật', 'error') }
+}
+
+// ── Discounts ──────────────────────────────────────────────
+async function loadDiscounts() {
+  try {
+    const res = await apiFetch('/api/discounts');
+    allDiscounts = await res.json();
+    renderDiscounts();
+  } catch { renderDiscounts() }
+}
+
+function filterDiscounts() { renderDiscounts() }
+
+function renderDiscounts() {
+  const search   = document.getElementById('discountSearch')?.value.toLowerCase() || '';
+  const filtered = allDiscounts.filter(d => !search || d.code?.toLowerCase().includes(search));
+  const tbody    = document.getElementById('discountsTable');
+
+  if (!filtered.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="8">Chưa có mã nào</td></tr>'; return; }
+
+  tbody.innerHTML = filtered.map(d => {
+    const expired = d.expireAt && new Date(d.expireAt) < new Date();
+    const full    = d.maxUse && d.used >= d.maxUse;
+    return `
+      <tr>
+        <td><span class="mono" style="font-size:.9rem;font-weight:700">${d.code}</span></td>
+        <td>${d.type === 'percent' ? '📊 %' : '💵 Cố định'}</td>
+        <td class="mono">${d.type === 'percent' ? d.percent+'%' : fmt(d.fixedAmount)}</td>
+        <td><span class="mono">${d.used} / ${d.maxUse || '∞'}</span></td>
+        <td class="mono">${d.maxDiscountAmount ? fmt(d.maxDiscountAmount) : '—'}</td>
+        <td style="color:${expired ? 'var(--red)' : 'var(--muted)'}">
+          ${d.expireAt ? fmtDate(d.expireAt) : '∞'}
+        </td>
+        <td>${expired || full ? '<span class="tag tag-red">Hết hạn</span>' : d.isActive ? '<span class="tag tag-green">Active</span>' : '<span class="tag tag-gray">Tắt</span>'}</td>
+        <td>
+          <button class="btn btn-red btn-sm" onclick="deleteDiscount('${d._id}')">🗑️</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function openAddDiscount() {
+  ['newDiscCode','newDiscValue','newDiscMax','newDiscMin','newDiscMaxUse','newDiscDays'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  openModal('modalAddDiscount');
+}
+
+function toggleDiscValue() {
+  const type = document.getElementById('newDiscType').value;
+  document.getElementById('discValueLabel').textContent = type === 'percent' ? 'Giá trị (%)' : 'Số tiền giảm (đ)';
+}
+
+async function createDiscount() {
+  const type  = document.getElementById('newDiscType').value;
+  const value = Number(document.getElementById('newDiscValue').value);
+  const days  = document.getElementById('newDiscDays').value;
+  const body  = {
+    code:        document.getElementById('newDiscCode').value.trim().toUpperCase(),
+    type,
+    percent:     type === 'percent' ? value : null,
+    fixedAmount: type === 'fixed'   ? value : null,
+    maxDiscountAmount: document.getElementById('newDiscMax').value ? Number(document.getElementById('newDiscMax').value) : null,
+    minOrderAmount:    Number(document.getElementById('newDiscMin').value) || 0,
+    maxUse:      document.getElementById('newDiscMaxUse').value ? Number(document.getElementById('newDiscMaxUse').value) : null,
+    expireAt:    days ? new Date(Date.now() + Number(days) * 86400000) : null,
+  };
+  if (!body.code || !value) { toast('Điền mã và giá trị!', 'error'); return; }
+  try {
+    const res = await apiFetch('/api/discounts', { method:'POST', body });
+    if (!res.ok) throw new Error();
+    toast(`✅ Tạo mã ${body.code} thành công!`, 'success');
+    closeModal('modalAddDiscount');
+    loadDiscounts();
+  } catch { toast('Lỗi tạo mã', 'error') }
+}
+
+async function deleteDiscount(id) {
+  if (!confirm('Xoá mã này?')) return;
+  try {
+    await apiFetch(`/api/discounts/${id}`, { method:'DELETE' });
+    toast('🗑️ Đã xoá mã', 'info');
+    loadDiscounts();
+  } catch { toast('Lỗi xoá', 'error') }
+}
+
+// ── Helpers ────────────────────────────────────────────────
+function fmt(n) { return (n || 0).toLocaleString('vi-VN') + 'đ' }
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleString('vi-VN', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1) }
+
+function statusTag(s) {
+  const map = {
+    waiting_payment: ['tag-yellow', '⏳ Chờ TT'],
+    paid:            ['tag-blue',   '💳 Đã TT'],
+    delivering:      ['tag-blue',   '🚚 Đang giao'],
+    completed:       ['tag-green',  '✅ Hoàn thành'],
+    cancelled:       ['tag-red',    '❌ Đã huỷ'],
+    refunded:        ['tag-gray',   '💸 Hoàn tiền'],
+  };
+  const [cls, label] = map[s] || ['tag-gray', s];
+  return `<span class="tag ${cls}">${label}</span>`;
+}
+
+function getLast7Days() {
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d   = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toDateString();
+    const val = allOrders
+      .filter(o => o.status === 'completed' && new Date(o.createdAt).toDateString() === key)
+      .reduce((s, o) => s + o.total, 0);
+    days.push({ label: ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()], val });
+  }
+  return days;
+}
+
+function renderPagination(total, current, cb, elId) {
+  const pages = Math.ceil(total / PAGE_SIZE);
+  const el    = document.getElementById(elId);
+  if (!el) return;
+  if (pages <= 1) { el.innerHTML = ''; return; }
+  let html = `<button class="page-btn" onclick="(${cb})(${current-1})" ${current<=1?'disabled':''}>‹</button>`;
+  for (let i = 1; i <= pages; i++) {
+    if (i === 1 || i === pages || Math.abs(i - current) <= 1)
+      html += `<button class="page-btn ${i===current?'active':''}" onclick="(${cb})(${i})">${i}</button>`;
+    else if (Math.abs(i - current) === 2)
+      html += `<span style="padding:0 4px;color:var(--muted)">…</span>`;
+  }
+  html += `<button class="page-btn" onclick="(${cb})(${current+1})" ${current>=pages?'disabled':''}>›</button>`;
+  el.innerHTML = html;
+}
+
+// ── Modal helpers ──────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('open') }
+function closeModal(id) { document.getElementById(id).classList.remove('open') }
+
+document.querySelectorAll('.modal-bg').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open') });
+});
+
+// ── Toast ──────────────────────────────────────────────────
+function toast(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ── Constants ──────────────────────────────────────────────
+const CAT  = { software:'Phần mềm', game:'Game', account:'Tài khoản', other:'Khác' };
+const TIER = { bronze:'🥉 Đồng', silver:'🥈 Bạc', gold:'🥇 Vàng', vip:'💎 VIP' };
+</script>
+</body>
+</html>

@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>ALX SHOP</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Reset & Variables ────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --tg-bg:       var(--tg-theme-bg-color, #0f0f13);
+      --tg-text:     var(--tg-theme-text-color, #ffffff);
+      --tg-hint:     var(--tg-theme-hint-color, #8a8a9a);
+      --tg-btn:      var(--tg-theme-button-color, #6c63ff);
+      --tg-btn-text: var(--tg-theme-button-text-color, #ffffff);
+      --tg-secondary-bg: var(--tg-theme-secondary-bg-color, #1a1a24);
+
+      --accent:   #6c63ff;
+      --accent2:  #ff6b6b;
+      --surface:  rgba(255,255,255,0.05);
+      --border:   rgba(255,255,255,0.08);
+      --success:  #4ade80;
+      --warning:  #fbbf24;
+
+      --r-sm: 12px;
+      --r-md: 18px;
+      --r-lg: 24px;
+
+      --font-head: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    html { font-size: 15px; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--tg-bg);
+      color: var(--tg-text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding-bottom: 100px;
+    }
+
+    /* ── Background mesh ─────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 10% 0%, rgba(108,99,255,.18) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 30% at 90% 80%, rgba(255,107,107,.12) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Header ──────────────────────────────────────── */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 16px 20px 12px;
+      background: rgba(15,15,19,.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .logo {
+      font-family: var(--font-head);
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .cart-btn {
+      position: relative;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .cart-btn:active { background: rgba(255,255,255,.1); }
+    .cart-badge {
+      position: absolute;
+      top: -4px; right: -4px;
+      min-width: 18px; height: 18px;
+      background: var(--accent2);
+      border-radius: 9px;
+      font-size: 10px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 4px;
+      opacity: 0; transform: scale(0);
+      transition: all .25s cubic-bezier(.34,1.56,.64,1);
+    }
+    .cart-badge.show { opacity: 1; transform: scale(1); }
+
+    /* ── Tabs ────────────────────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab {
+      flex-shrink: 0;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: .8rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--tg-hint);
+      transition: all .2s;
+      white-space: nowrap;
+    }
+    .tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* ── Hero Banner ─────────────────────────────────── */
+    .hero {
+      margin: 16px 16px 0;
+      border-radius: var(--r-lg);
+      padding: 24px 20px;
+      background: linear-gradient(135deg, var(--accent) 0%, #a855f7 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: '⚡';
+      position: absolute;
+      right: 20px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 3.5rem;
+      opacity: .25;
+    }
+    .hero-label {
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      opacity: .8;
+      margin-bottom: 6px;
+    }
+    .hero-title {
+      font-family: var(--font-head);
+      font-size: 1.4rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+    .hero-sub {
+      font-size: .82rem;
+      opacity: .75;
+    }
+
+    /* ── Section ─────────────────────────────────────── */
+    .section {
+      padding: 20px 16px 0;
+    }
+    .section-title {
+      font-family: var(--font-head);
+      font-size: .95rem;
+      font-weight: 700;
+      letter-spacing: -.3px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Product Grid ────────────────────────────────── */
+    .product-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .product-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 14px;
+      cursor: pointer;
+      transition: transform .18s, border-color .18s;
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp .4s ease both;
+    }
+    .product-card:nth-child(2) { animation-delay: .06s; }
+    .product-card:nth-child(3) { animation-delay: .12s; }
+    .product-card:nth-child(4) { animation-delay: .18s; }
+
+    .product-card:active { transform: scale(.97); }
+    .product-card.out { opacity: .55; }
+
+    .product-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--accent) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .product-card:active::before { opacity: .06; }
+
+    .product-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .product-name {
+      font-family: var(--font-head);
+      font-size: .88rem;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 6px;
+    }
+    .product-price {
+      font-size: .95rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .product-stock {
+      font-size: .7rem;
+      color: var(--tg-hint);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .stock-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      flex-shrink: 0;
+    }
+    .stock-dot.empty { background: var(--accent2); }
+
+    .product-badge {
+      position: absolute;
+      top: 10px; right: 10px;
+      font-size: .62rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 20px;
+      background: var(--accent2);
+      color: #fff;
+      letter-spacing: .5px;
+    }
+
+    /* ── Order List ──────────────────────────────────── */
+    .order-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .order-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: fadeUp .35s ease both;
+    }
+    .order-icon {
+      width: 42px; height: 42px;
+      border-radius: 12px;
+      background: rgba(108,99,255,.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+    .order-info { flex: 1; min-width: 0; }
+    .order-id {
+      font-size: .7rem;
+      color: var(--tg-hint);
+      font-family: monospace;
+      margin-bottom: 2px;
+    }
+    .order-name {
+      font-weight: 600;
+      font-size: .88rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .order-date { font-size: .7rem; color: var(--tg-hint); margin-top: 2px; }
+    .order-right { text-align: right; flex-shrink: 0; }
+    .order-amount { font-weight: 700; font-size: .9rem; }
+    .order-status {
+      font-size: .65rem;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+      margin-top: 4px;
+      display: inline-block;
+    }
+    .status-waiting  { background: rgba(251,191,36,.15); color: var(--warning); }
+    .status-completed { background: rgba(74,222,128,.15); color: var(--success); }
+    .status-cancelled { background: rgba(255,107,107,.15); color: var(--accent2); }
+
+    /* ── Empty State ─────────────────────────────────── */
+    .empty {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--tg-hint);
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 12px; opacity: .5; }
+    .empty-text { font-size: .9rem; }
+
+    /* ── Cart Drawer ─────────────────────────────────── */
+    .drawer-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.6);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      opacity: 0; pointer-events: none;
+      transition: opacity .3s;
+    }
+    .drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+    .drawer {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #13131a;
+      border-radius: 24px 24px 0 0;
+      border-top: 1px solid var(--border);
+      padding: 0 0 40px;
+      z-index: 201;
+      transform: translateY(100%);
+      transition: transform .35s cubic-bezier(.32,.72,0,1);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .drawer.open { transform: translateY(0); }
+
+    .drawer-handle {
+      width: 36px; height: 4px;
+      background: rgba(255,255,255,.2);
+      border-radius: 2px;
+      margin: 12px auto 0;
+    }
+    .drawer-title {
+      font-family: var(--font-head);
+      font-size: 1.1rem;
+      font-weight: 800;
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .cart-items { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+
+    .cart-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--surface);
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border);
+    }
+    .ci-icon { font-size: 1.6rem; flex-shrink: 0; }
+    .ci-info { flex: 1; min-width: 0; }
+    .ci-name { font-weight: 600; font-size: .88rem; }
+    .ci-price { font-size: .8rem; color: var(--accent); margin-top: 2px; }
+    .ci-remove {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: rgba(255,107,107,.1);
+      color: var(--accent2);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: .85rem;
+      transition: background .2s;
+    }
+    .ci-remove:active { background: rgba(255,107,107,.25); }
+
+    /* ── Coupon Input ────────────────────────────────── */
+    .coupon-row {
+      margin: 0 16px;
+      display: flex;
+      gap: 8px;
+    }
+    .coupon-input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 10px 14px;
+      color: var(--tg-text);
+      font-family: var(--font-body);
+      font-size: .88rem;
+      outline: none;
+      transition: border-color .2s;
+      text-transform: uppercase;
+    }
+    .coupon-input:focus { border-color: var(--accent); }
+    .coupon-input::placeholder { text-transform: none; color: var(--tg-hint); }
+
+    .coupon-btn {
+      padding: 10px 16px;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--r-sm);
+      color: #fff;
+      font-weight: 700;
+      font-size: .82rem;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    .coupon-btn:active { opacity: .8; }
+
+    .coupon-success {
+      margin: 8px 16px 0;
+      padding: 8px 12px;
+      background: rgba(74,222,128,.1);
+      border: 1px solid rgba(74,222,128,.25);
+      border-radius: var(--r-sm);
+      font-size: .8rem;
+      color: var(--success);
+      display: none;
+    }
+    .coupon-success.show { display: block; }
+
+    /* ── Cart Summary ────────────────────────────────── */
+    .cart-summary {
+      margin: 12px 16px 0;
+      padding: 14px 16px;
+      background: var(--surface);
+      border-radius: var(--r-md);
+      border: 1px solid var(--border);
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: .85rem;
+      color: var(--tg-hint);
+      margin-bottom: 8px;
+    }
+    .summary-row.total {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--tg-text);
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      margin-bottom: 0;
+    }
+    .discount-val { color: var(--success); }
+
+    .checkout-btn {
+      margin: 14px 16px 0;
+      width: calc(100% - 32px);
+      padding: 15px;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--r-md);
+      color: #fff;
+      font-family: var(--font-head);
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .2s, transform .15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .checkout-btn:active { opacity: .85; transform: scale(.98); }
+    .checkout-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* ── Product Detail Modal ────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.7);
+      backdrop-filter: blur(6px);
+      z-index: 300;
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s;
+      display: flex;
+      align-items: flex-end;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    .modal {
+      width: 100%;
+      background: #13131a;
+      border-radius: 24px 24px 0 0;
+      border-top: 1px solid var(--border);
+      padding: 20px 20px 48px;
+      transform: translateY(100%);
+      transition: transform .3s cubic-bezier(.32,.72,0,1);
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+
+    .modal-handle {
+      width: 36px; height: 4px;
+      background: rgba(255,255,255,.2);
+      border-radius: 2px;
+      margin: 0 auto 20px;
+    }
+    .modal-icon { font-size: 3.5rem; text-align: center; margin-bottom: 12px; }
+    .modal-name {
+      font-family: var(--font-head);
+      font-size: 1.3rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+    .modal-price {
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+    .modal-desc {
+      font-size: .85rem;
+      color: var(--tg-hint);
+      line-height: 1.6;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .modal-meta {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .meta-chip {
+      flex: 1;
+      padding: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      text-align: center;
+    }
+    .meta-chip-label { font-size: .65rem; color: var(--tg-hint); margin-bottom: 3px; text-transform: uppercase; letter-spacing: 1px; }
+    .meta-chip-val { font-weight: 700; font-size: .9rem; }
+
+    .add-btn {
+      width: 100%;
+      padding: 15px;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--r-md);
+      color: #fff;
+      font-family: var(--font-head);
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    .add-btn:active { opacity: .85; }
+    .add-btn:disabled { background: var(--surface); color: var(--tg-hint); border: 1px solid var(--border); }
+
+    /* ── Loading skeleton ────────────────────────────── */
+    .skeleton {
+      background: linear-gradient(90deg,
+        rgba(255,255,255,.04) 25%,
+        rgba(255,255,255,.08) 50%,
+        rgba(255,255,255,.04) 75%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 8px;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    .skeleton-card {
+      height: 160px;
+      border-radius: var(--r-md);
+    }
+
+    /* ── Toast ───────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      top: 80px; left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: rgba(30,30,40,.95);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: .85rem;
+      font-weight: 500;
+      z-index: 999;
+      opacity: 0;
+      transition: all .3s;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Bottom Nav ──────────────────────────────────── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(13,13,19,.92);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+      z-index: 100;
+    }
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      padding: 6px 0;
+      transition: opacity .2s;
+    }
+    .nav-icon { font-size: 1.3rem; line-height: 1; }
+    .nav-label { font-size: .65rem; font-weight: 500; color: var(--tg-hint); }
+    .nav-item.active .nav-label { color: var(--accent); }
+    .nav-item.active .nav-icon { filter: drop-shadow(0 0 6px var(--accent)); }
+
+    /* ── Animations ──────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Views ───────────────────────────────────────── */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ── Profile ─────────────────────────────────────── */
+    .profile-card {
+      margin: 16px;
+      padding: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      animation: fadeUp .35s ease;
+    }
+    .profile-avatar {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #a855f7);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 800;
+      font-family: var(--font-head);
+      flex-shrink: 0;
+    }
+    .profile-name { font-family: var(--font-head); font-size: 1.1rem; font-weight: 800; }
+    .profile-id   { font-size: .75rem; color: var(--tg-hint); margin-top: 2px; font-family: monospace; }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 0 16px 16px;
+    }
+    .stat-box {
+      padding: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      animation: fadeUp .4s ease both;
+    }
+    .stat-box:nth-child(2) { animation-delay: .06s; }
+    .stat-box:nth-child(3) { animation-delay: .12s; }
+    .stat-box:nth-child(4) { animation-delay: .18s; }
+
+    .stat-label { font-size: .7rem; color: var(--tg-hint); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .stat-value { font-family: var(--font-head); font-size: 1.2rem; font-weight: 800; }
+    .stat-value.accent { color: var(--accent); }
+    .stat-value.success { color: var(--success); }
+  </style>
+</head>
+<body>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-top">
+    <div class="logo">⚡ DigitalShop</div>
+    <div class="cart-btn" onclick="openCart()">
+      🛒
+      <div class="cart-badge" id="cartBadge">0</div>
+    </div>
+  </div>
+  <div class="tabs" id="categoryTabs">
+    <div class="tab active" data-cat="all">Tất cả</div>
+    <div class="tab" data-cat="software">Phần mềm</div>
+    <div class="tab" data-cat="game">Game</div>
+    <div class="tab" data-cat="account">Tài khoản</div>
+    <div class="tab" data-cat="other">Khác</div>
+  </div>
+</header>
+
+<!-- ── SHOP VIEW ── -->
+<div class="view active" id="viewShop">
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-label">Khuyến mãi hôm nay</div>
+    <div class="hero-title">Giảm 20% toàn bộ<br>sản phẩm phần mềm</div>
+    <div class="hero-sub">Nhập mã: <strong>FLASH20</strong> khi thanh toán</div>
+  </div>
+
+  <!-- Products -->
+  <div class="section">
+    <div class="section-title">Sản phẩm</div>
+    <div class="product-grid" id="productGrid">
+      <!-- skeleton -->
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ORDERS VIEW ── -->
+<div class="view" id="viewOrders">
+  <div class="section">
+    <div class="section-title">Đơn hàng của tôi</div>
+    <div class="order-list" id="orderList">
+      <div class="empty">
+        <div class="empty-icon">📦</div>
+        <div class="empty-text">Đang tải đơn hàng...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PROFILE VIEW ── -->
+<div class="view" id="viewProfile">
+  <div class="profile-card" id="profileCard">
+    <div class="profile-avatar" id="profileAvatar">?</div>
+    <div>
+      <div class="profile-name" id="profileName">Đang tải...</div>
+      <div class="profile-id" id="profileId">ID: —</div>
+    </div>
+  </div>
+
+  <div class="stat-grid" id="statGrid">
+    <div class="stat-box">
+      <div class="stat-label">Đơn hoàn thành</div>
+      <div class="stat-value accent" id="statOrders">—</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Đã chi tiêu</div>
+      <div class="stat-value success" id="statSpent">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Bottom Nav ── -->
+<nav class="bottom-nav">
+  <div class="nav-item active" id="navShop" onclick="switchView('shop')">
+    <div class="nav-icon">🏪</div>
+    <div class="nav-label">Cửa hàng</div>
+  </div>
+  <div class="nav-item" id="navOrders" onclick="switchView('orders')">
+    <div class="nav-icon">📦</div>
+    <div class="nav-label">Đơn hàng</div>
+  </div>
+  <div class="nav-item" id="navProfile" onclick="switchView('profile')">
+    <div class="nav-icon">👤</div>
+    <div class="nav-label">Tài khoản</div>
+  </div>
+</nav>
+
+<!-- ── Cart Drawer ── -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeCart()"></div>
+<div class="drawer" id="cartDrawer">
+  <div class="drawer-handle"></div>
+  <div class="drawer-title">🛒 Giỏ hàng</div>
+
+  <div class="cart-items" id="cartItems">
+    <div class="empty">
+      <div class="empty-icon">🛍️</div>
+      <div class="empty-text">Giỏ hàng trống</div>
+    </div>
+  </div>
+
+  <div class="coupon-row">
+    <input class="coupon-input" id="couponInput" type="text" placeholder="Nhập mã giảm giá..." maxlength="20" />
+    <button class="coupon-btn" onclick="applyCoupon()">Áp dụng</button>
+  </div>
+  <div class="coupon-success" id="couponSuccess"></div>
+
+  <div class="cart-summary" id="cartSummary" style="display:none">
+    <div class="summary-row">
+      <span>Tạm tính</span>
+      <span id="sumSubtotal">0đ</span>
+    </div>
+    <div class="summary-row" id="sumDiscountRow" style="display:none">
+      <span>Giảm giá</span>
+      <span class="discount-val" id="sumDiscount">-0đ</span>
+    </div>
+    <div class="summary-row total">
+      <span>Tổng cộng</span>
+      <span id="sumTotal">0đ</span>
+    </div>
+  </div>
+
+  <button class="checkout-btn" id="checkoutBtn" onclick="checkout()" disabled>
+    💳 Thanh toán
+  </button>
+</div>
+
+<!-- ── Product Detail Modal ── -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="productModal">
+    <div class="modal-handle"></div>
+    <div class="modal-icon" id="modalIcon"></div>
+    <div class="modal-name" id="modalName"></div>
+    <div class="modal-price" id="modalPrice"></div>
+    <div class="modal-desc" id="modalDesc"></div>
+    <div class="modal-meta">
+      <div class="meta-chip">
+        <div class="meta-chip-label">Tồn kho</div>
+        <div class="meta-chip-val" id="modalStock"></div>
+      </div>
+      <div class="meta-chip">
+        <div class="meta-chip-label">Giao hàng</div>
+        <div class="meta-chip-val" id="modalDeliver"></div>
+      </div>
+      <div class="meta-chip">
+        <div class="meta-chip-label">Danh mục</div>
+        <div class="meta-chip-val" id="modalCat"></div>
+      </div>
+    </div>
+    <button class="add-btn" id="modalAddBtn" onclick="addCurrentToCart()">
+      🛒 Thêm vào giỏ
+    </button>
+  </div>
+</div>
+
+<script>
+// ── Telegram WebApp Init ───────────────────────────────────
+const tg       = window.Telegram?.WebApp;
+const tgUser   = tg?.initDataUnsafe?.user || {};
+const SERVER   = ''; // thay bằng URL server của bạn, VD: https://yourserver.com
+
+if (tg) {
+  tg.ready();
+  tg.expand();
+  tg.enableClosingConfirmation();
+}
+
+// ── State ─────────────────────────────────────────────────
+let allProducts    = [];
+let filteredProducts = [];
+let cart           = {};       // { productId: { product, qty } }
+let discountCode   = null;
+let discountAmount = 0;
+let currentProduct = null;
+let currentView    = 'shop';
+let currentCat     = 'all';
+
+// ── Init ──────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadProfile();
+  loadProducts();
+  setupCategoryTabs();
+});
+
+// ── Profile ───────────────────────────────────────────────
+function loadProfile() {
+  const name   = tgUser.first_name || 'Khách';
+  const userId = tgUser.id || '—';
+
+  document.getElementById('profileName').textContent   = name;
+  document.getElementById('profileId').textContent     = `ID: ${userId}`;
+  document.getElementById('profileAvatar').textContent = name.charAt(0).toUpperCase();
+
+  if (userId !== '—') fetchUserStats(userId);
+}
+
+async function fetchUserStats(userId) {
+  try {
+    const res = await fetch(`${SERVER}/api/orders?telegramId=${userId}&limit=100`);
+    if (res.ok) {
+      const data = await res.json();
+      const completed = data.orders.filter(o => o.status === 'completed');
+      const spent     = completed.reduce((s, o) => s + o.total, 0);
+      document.getElementById('statOrders').textContent = completed.length;
+      document.getElementById('statSpent').textContent  = fmt(spent);
+    }
+  } catch {}
+}
+
+// ── Products ──────────────────────────────────────────────
+async function loadProducts() {
+  try {
+    const res  = await fetch(`${SERVER}/api/products`);
+    if (!res.ok) throw new Error('Failed to load products');
+    const data = await res.json();
+    allProducts = data;
+    filterAndRender();
+  } catch (err) {
+    console.error('Load products error:', err);
+    showToast('❌ Không thể tải sản phẩm');
+    allProducts = [];
+    filterAndRender();
+  }
+}
+
+function filterAndRender() {
+  filteredProducts = currentCat === 'all'
+    ? allProducts
+    : allProducts.filter(p => p.category === currentCat);
+  renderProducts(filteredProducts);
+}
+
+function renderProducts(products) {
+  const grid = document.getElementById('productGrid');
+  if (!products.length) {
+    grid.innerHTML = `<div class="empty" style="grid-column:span 2"><div class="empty-icon">😔</div><div class="empty-text">Không có sản phẩm</div></div>`;
+    return;
+  }
+
+  grid.innerHTML = products.map(p => `
+    <div class="product-card ${p.stock <= 0 ? 'out' : ''}" onclick="openProduct('${p._id}')">
+      ${p.isHot ? '<div class="product-badge">HOT</div>' : ''}
+      <span class="product-icon">${p.icon || '📦'}</span>
+      <div class="product-name">${p.name}</div>
+      <div class="product-price">${fmt(p.price)}</div>
+      <div class="product-stock">
+        <div class="stock-dot ${p.stock <= 0 ? 'empty' : ''}"></div>
+        ${p.stock > 0 ? `Còn ${p.stock}` : 'Hết hàng'}
+      </div>
+    </div>
+  `).join('');
+}
+
+function setupCategoryTabs() {
+  document.getElementById('categoryTabs').addEventListener('click', e => {
+    const tab = e.target.closest('.tab');
+    if (!tab) return;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentCat = tab.dataset.cat;
+    filterAndRender();
+  });
+}
+
+// ── Product Modal ─────────────────────────────────────────
+function openProduct(id) {
+  currentProduct = allProducts.find(p => p._id === id);
+  if (!currentProduct) return;
+
+  document.getElementById('modalIcon').textContent  = currentProduct.icon || '📦';
+  document.getElementById('modalName').textContent  = currentProduct.name;
+  document.getElementById('modalPrice').textContent = fmt(currentProduct.price);
+  document.getElementById('modalDesc').textContent  = currentProduct.description || 'Sản phẩm chất lượng cao, giao hàng tự động ngay sau thanh toán.';
+  document.getElementById('modalStock').textContent = currentProduct.stock > 0 ? currentProduct.stock : '—';
+  document.getElementById('modalDeliver').textContent = currentProduct.autoDeliver ? '⚡ Tự động' : '👤 Thủ công';
+  document.getElementById('modalCat').textContent   = CAT_LABEL[currentProduct.category] || currentProduct.category;
+
+  const btn = document.getElementById('modalAddBtn');
+  btn.disabled       = currentProduct.stock <= 0;
+  btn.textContent    = currentProduct.stock > 0 ? '🛒 Thêm vào giỏ' : '❌ Hết hàng';
+
+  document.getElementById('modalOverlay').classList.add('open');
+  tg?.HapticFeedback?.impactOccurred('light');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) {
+    document.getElementById('modalOverlay').classList.remove('open');
+    currentProduct = null;
+  }
+}
+
+function addCurrentToCart() {
+  if (!currentProduct || currentProduct.stock <= 0) return;
+  addToCart(currentProduct);
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+// ── Cart ──────────────────────────────────────────────────
+function addToCart(product) {
+  const currentQty = cart[product._id]?.qty || 0;
+  if (currentQty >= product.stock) {
+    showToast(`⚠️ Chỉ còn ${product.stock} sản phẩm`);
+    return;
+  }
+
+  if (cart[product._id]) {
+    cart[product._id].qty++;
+  } else {
+    cart[product._id] = { product, qty: 1 };
+  }
+  updateCartBadge();
+  renderCartItems();
+  showToast(`✅ Đã thêm "${product.name}"`);
+  tg?.HapticFeedback?.notificationOccurred('success');
+}
+
+function removeFromCart(id) {
+  delete cart[id];
+  updateCartBadge();
+  renderCartItems();
+  tg?.HapticFeedback?.impactOccurred('medium');
+}
+
+function updateCartBadge() {
+  const total = Object.values(cart).reduce((s, i) => s + i.qty, 0);
+  const badge = document.getElementById('cartBadge');
+  badge.textContent = total;
+  badge.classList.toggle('show', total > 0);
+}
+
+function renderCartItems() {
+  const container = document.getElementById('cartItems');
+  const items     = Object.values(cart);
+
+  if (!items.length) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">🛍️</div><div class="empty-text">Giỏ hàng trống</div></div>`;
+    document.getElementById('cartSummary').style.display = 'none';
+    document.getElementById('checkoutBtn').disabled = true;
+    return;
+  }
+
+  container.innerHTML = items.map(({ product, qty }) => `
+    <div class="cart-item">
+      <div class="ci-icon">${product.icon || '📦'}</div>
+      <div class="ci-info">
+        <div class="ci-name">${product.name}</div>
+        <div class="ci-price">${fmt(product.price)} × ${qty}</div>
+      </div>
+      <div class="ci-remove" onclick="removeFromCart('${product._id}')">✕</div>
+    </div>
+  `).join('');
+
+  updateSummary();
+  document.getElementById('checkoutBtn').disabled = false;
+}
+
+function updateSummary() {
+  const subtotal = Object.values(cart).reduce((s, i) => s + i.product.price * i.qty, 0);
+  const total    = Math.max(0, subtotal - discountAmount);
+
+  document.getElementById('sumSubtotal').textContent = fmt(subtotal);
+  document.getElementById('sumTotal').textContent    = fmt(total);
+
+  const discRow = document.getElementById('sumDiscountRow');
+  if (discountAmount > 0) {
+    discRow.style.display = 'flex';
+    document.getElementById('sumDiscount').textContent = `-${fmt(discountAmount)}`;
+  } else {
+    discRow.style.display = 'none';
+  }
+
+  document.getElementById('cartSummary').style.display = 'block';
+}
+
+function openCart() {
+  renderCartItems();
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('cartDrawer').classList.add('open');
+  tg?.HapticFeedback?.impactOccurred('light');
+}
+
+function closeCart() {
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.getElementById('cartDrawer').classList.remove('open');
+}
+
+// ── Coupon ────────────────────────────────────────────────
+async function applyCoupon() {
+  const code = document.getElementById('couponInput').value.trim().toUpperCase();
+  if (!code) return showToast('⚠️ Nhập mã giảm giá!');
+
+  const subtotal = Object.values(cart).reduce((s, i) => s + i.product.price * i.qty, 0);
+  if (!subtotal) return showToast('🛒 Giỏ hàng trống!');
+
+  try {
+    const res  = await fetch(`${SERVER}/api/discount/validate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, telegramId: tgUser.id, orderTotal: subtotal }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Mã không hợp lệ');
+
+    discountCode   = code;
+    discountAmount = data.discountAmount;
+    updateSummary();
+
+    const el = document.getElementById('couponSuccess');
+    el.textContent = `🎉 Áp dụng thành công! Giảm ${fmt(discountAmount)}`;
+    el.classList.add('show');
+    tg?.HapticFeedback?.notificationOccurred('success');
+  } catch (err) {
+    showToast(`❌ ${err.message}`);
+  }
+}
+
+// ── Checkout ──────────────────────────────────────────────
+async function checkout() {
+  const items    = Object.values(cart);
+  if (!items.length) return;
+
+  const subtotal = items.reduce((s, i) => s + i.product.price * i.qty, 0);
+  const total    = Math.max(0, subtotal - discountAmount);
+
+  const payload = {
+    telegramId:    tgUser.id,
+    username:      tgUser.username || '',
+    items:         items.map(i => ({
+      productId:   i.product._id,
+      productName: i.product.name,
+      price:       i.product.price,
+      quantity:    i.qty,
+    })),
+    total,
+    discountCode,
+  };
+
+  const btn = document.getElementById('checkoutBtn');
+  btn.disabled     = true;
+  btn.textContent  = '⏳ Đang xử lý...';
+
+  try {
+    // Gửi qua Telegram WebApp data
+    if (tg?.sendData) {
+      tg.sendData(JSON.stringify(payload));
+    } else {
+      // Fallback: gọi API trực tiếp
+      const res = await fetch(`${SERVER}/api/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const order = await res.json();
+      if (!res.ok) throw new Error(order.error);
+      showToast('✅ Đơn hàng đã được tạo!');
+    }
+
+    // Reset cart
+    cart           = {};
+    discountCode   = null;
+    discountAmount = 0;
+    document.getElementById('couponInput').value  = '';
+    document.getElementById('couponSuccess').classList.remove('show');
+    updateCartBadge();
+    closeCart();
+    tg?.HapticFeedback?.notificationOccurred('success');
+
+  } catch (err) {
+    showToast(`❌ ${err.message || 'Lỗi tạo đơn!'}`);
+    btn.disabled    = false;
+    btn.textContent = '💳 Thanh toán';
+  }
+}
+
+// ── Orders ────────────────────────────────────────────────
+async function loadOrders() {
+  const list = document.getElementById('orderList');
+  list.innerHTML = `<div class="empty"><div class="empty-icon">⏳</div><div class="empty-text">Đang tải...</div></div>`;
+
+  try {
+    const res = await fetch(`${SERVER}/api/orders?telegramId=${tgUser.id}&limit=20`);
+    if (!res.ok) throw new Error('Failed to load orders');
+    const data = await res.json();
+    renderOrders(data.orders || []);
+  } catch (err) {
+    console.error('Load orders error:', err);
+    list.innerHTML = `<div class="empty"><div class="empty-icon">❌</div><div class="empty-text">Không thể tải đơn hàng</div></div>`;
+  }
+}
+
+function renderOrders(orders) {
+  const list = document.getElementById('orderList');
+  if (!orders.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📦</div><div class="empty-text">Bạn chưa có đơn hàng nào</div></div>`;
+    return;
+  }
+
+  list.innerHTML = orders.map(o => `
+    <div class="order-card">
+      <div class="order-icon">${getStatusIcon(o.status)}</div>
+      <div class="order-info">
+        <div class="order-id">${o.orderId}</div>
+        <div class="order-name">${o.items?.[0]?.productName || 'Sản phẩm'}</div>
+        <div class="order-date">${formatDate(o.createdAt)}</div>
+      </div>
+      <div class="order-right">
+        <div class="order-amount">${fmt(o.total)}</div>
+        <div class="order-status status-${getStatusClass(o.status)}">${STATUS_LABEL[o.status] || o.status}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Navigation ────────────────────────────────────────────
+function switchView(view) {
+  currentView = view;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  document.getElementById(`view${capitalize(view)}`).classList.add('active');
+  document.getElementById(`nav${capitalize(view)}`).classList.add('active');
+
+  if (view === 'orders') loadOrders();
+  tg?.HapticFeedback?.selectionChanged?.();
+}
+
+// ── Helpers ───────────────────────────────────────────────
+function fmt(n) {
+  return n?.toLocaleString('vi-VN') + 'đ';
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  return new Date(d).toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+function getStatusIcon(s) {
+  return { waiting_payment:'⏳', paid:'💳', delivering:'🚚', completed:'✅', cancelled:'❌' }[s] || '❓';
+}
+
+function getStatusClass(s) {
+  return { waiting_payment:'waiting', completed:'completed', cancelled:'cancelled' }[s] || 'waiting';
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+const STATUS_LABEL = {
+  waiting_payment: 'Chờ TT',
+  paid:            'Đã TT',
+  delivering:      'Đang giao',
+  completed:       'Hoàn thành',
+  cancelled:       'Đã huỷ',
+};
+
+const CAT_LABEL = {
+  software: 'Phần mềm',
+  game:     'Game',
+  account:  'Tài khoản',
+  other:    'Khác',
+};
+</script>
+</body>
+</html>
