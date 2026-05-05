@@ -584,15 +584,31 @@
           </select>
         </div>
       </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tên app</label>
+          <input class="form-input" id="newProductAppName" placeholder="NgoTran [ Vip ]"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tên gói</label>
+          <input class="form-input" id="newProductPackageLabel" placeholder="Gói 30 ngày"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Thứ tự hiển thị</label>
+          <input class="form-input" id="newProductSortOrder" type="number" placeholder="0"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            <input type="checkbox" id="newProductAuto" checked style="margin-right:6px"/>
+            Giao hàng tự động
+          </label>
+        </div>
+      </div>
       <div class="form-group">
         <label class="form-label">Mô tả</label>
         <textarea class="form-textarea" id="newProductDesc" placeholder="Mô tả sản phẩm..."></textarea>
-      </div>
-      <div class="form-group">
-        <label class="form-label">
-          <input type="checkbox" id="newProductAuto" checked style="margin-right:6px"/>
-          Giao hàng tự động
-        </label>
       </div>
     </div>
     <div class="modal-foot">
@@ -952,6 +968,9 @@ async function addProduct() {
     icon:        document.getElementById('newProductIcon').value.trim(),
     price:       Number(document.getElementById('newProductPrice').value),
     category:    document.getElementById('newProductCat').value,
+    appName:     document.getElementById('newProductAppName').value.trim(),
+    packageLabel: document.getElementById('newProductPackageLabel').value.trim(),
+    sortOrder:   Number(document.getElementById('newProductSortOrder').value || 0),
     description: document.getElementById('newProductDesc').value.trim(),
     autoDeliver: document.getElementById('newProductAuto').checked,
   };

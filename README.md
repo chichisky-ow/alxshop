@@ -1,17 +1,20 @@
 # ALX SHOP - Telegram Mini App
 
-Shop bán hàng số tự động với Telegram Bot + Mini App + Admin Panel.
+Shop bán hàng số tự động với Telegram Bot + Mini App + Admin Panel + Ví nạp tiền.
 
 ## Tính năng
 
 - Telegram Bot bán hàng tự động
 - Telegram Mini App giao diện hiện đại
+- Hệ thống ví nạp tiền và thanh toán bằng số dư
 - Admin panel quản lý sản phẩm, đơn hàng, mã giảm giá
 - Thanh toán QR ngân hàng VietQR
 - Tự động giao key/tài khoản sau thanh toán
 - Quản lý tồn kho
 - Mã giảm giá
 - Theo dõi đơn hàng
+- Top nạp tiền tháng
+- Kho key cá nhân
 
 ## Cài đặt
 
@@ -70,7 +73,9 @@ newminiapp/
 │   ├── models/
 │   │   ├── Product.js
 │   │   ├── Order.js
-│   │   └── Discount.js
+│   │   ├── Discount.js
+│   │   ├── User.js
+│   │   └── Topup.js
 │   ├── services/
 │   │   └── delivery.js
 │   └── utils/
@@ -102,16 +107,18 @@ Body format:
 ```json
 {
   "amount": 150000,
-  "description": "ORD1234567890"
+  "description": "NAP1234567890"
 }
 ```
+
+Hỗ trợ cả mã đơn hàng (ORD...) và mã nạp tiền (NAP...).
 
 ## Bot Commands
 
 - `/start` - Khởi động bot
 - `/products` - Xem sản phẩm
 - `/orders` - Đơn hàng của tôi
-- `/coupon <MÃ>` - Áp dụng mã giảm giá
+- `/coupon <MÃ> <SỐ_TIỀN>` - Kiểm tra mã giảm giá
 
 ### Admin Commands
 
@@ -122,6 +129,14 @@ Body format:
 
 ## API Endpoints
 
+### User & Wallet
+- `GET /api/me?telegramId=...` - Lấy profile, số dư, kho key
+
+### Topups
+- `POST /api/topups` - Tạo yêu cầu nạp tiền
+- `GET /api/topups?telegramId=...` - Lịch sử nạp
+- `GET /api/leaderboard/topups` - Top nạp tháng
+
 ### Products
 - `GET /api/products` - Lấy danh sách sản phẩm
 - `POST /api/products` - Tạo sản phẩm (admin)
@@ -130,7 +145,7 @@ Body format:
 
 ### Orders
 - `GET /api/orders` - Lấy đơn hàng (user: cần telegramId, admin: tất cả)
-- `POST /api/orders` - Tạo đơn hàng
+- `POST /api/orders` - Tạo đơn hàng (server tự tính giá, trừ ví)
 - `PATCH /api/orders/:orderId/confirm` - Xác nhận thanh toán (admin)
 - `PATCH /api/orders/:orderId/deliver` - Giao hàng thủ công (admin)
 - `PATCH /api/orders/:orderId/cancel` - Hủy đơn (admin)
@@ -141,8 +156,9 @@ Body format:
 - `DELETE /api/discounts/:id` - Xóa mã (admin)
 - `POST /api/discount/validate` - Validate mã giảm giá
 
-### Stats
+### Stats & Feed
 - `GET /api/stats` - Thống kê tổng quan (admin)
+- `GET /api/feed/recent` - Feed giao dịch gần đây
 
 ## License
 

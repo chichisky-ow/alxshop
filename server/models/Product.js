@@ -9,6 +9,10 @@ const ProductSchema = new mongoose.Schema(
     icon:        { type: String, default: "📦" },
     imageUrl:    { type: String, default: "" },
 
+    appName:      { type: String, default: "" },
+    packageLabel: { type: String, default: "" },
+    sortOrder:    { type: Number, default: 0 },
+
     stock:       { type: Number, default: 0, min: 0 },
     autoDeliver: { type: Boolean, default: true },
     contentPool: { type: [String], default: [] },

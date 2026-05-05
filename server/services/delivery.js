@@ -57,7 +57,11 @@ module.exports = async function deliver(bot, order) {
       `📦 ${deliveredItems.length} sản phẩm đã giao`
     );
   } else if (deliveredItems.length > 0) {
-    await order.markDelivered(deliveredItems);
+    for (const d of deliveredItems) {
+      const orderItem = order.items.find(i => String(i.productId) === String(d.productId));
+      if (orderItem) orderItem.deliveredContent = d.content;
+    }
+    order.status = "delivering";
     order.note = `Chưa giao: ${failedItems.map(f => f.item.productName).join(", ")}`;
     await order.save();
     await _notifyAdmin(bot,
@@ -65,6 +69,7 @@ module.exports = async function deliver(bot, order) {
       failedItems.map(f => `  • ${f.item.productName}: ${f.reason}`).join("\n")
     );
   } else {
+    order.status = "paid";
     order.note = "Giao hàng tự động thất bại";
     await order.save();
     await _notifyAdmin(bot,

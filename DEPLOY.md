@@ -55,11 +55,11 @@ git push -u origin main
 6. Environment Variables (Add từng biến):
    ```
    MONGO_URL=mongodb+srv://alxshop_user:YOUR_PASSWORD@cluster0.xxxxx.mongodb.net/alxshop?retryWrites=true&w=majority
-   BOT_TOKEN=8782848049:AAHnQmTxY3krMHQl-v4t4SoiB6EZs3fEndk
-   ADMIN_ID=5446467416
-   ADMIN_TOKEN=your_secure_random_token_here
+   BOT_TOKEN=YOUR_BOT_TOKEN_HERE
+   ADMIN_ID=YOUR_TELEGRAM_ID
+   ADMIN_TOKEN=YOUR_SECURE_RANDOM_TOKEN
    BANK_BIN=970407
-   BANK_ACCOUNT=777777777865
+   BANK_ACCOUNT=YOUR_BANK_ACCOUNT
    PORT=3000
    NODE_ENV=production
    ```

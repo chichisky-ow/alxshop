@@ -8,6 +8,8 @@ const { Telegraf, Markup } = require("telegraf");
 const Order     = require("./models/Order");
 const Product   = require("./models/Product");
 const Discount  = require("./models/Discount");
+const User      = require("./models/User");
+const Topup     = require("./models/Topup");
 const deliver   = require("./services/delivery");
 const { checkLimit, formatRetry } = require("./utils/rateLimit");
 
@@ -42,6 +44,25 @@ const adminAuth = (req, res, next) => {
 // ── Helpers ───────────────────────────────────────────────
 function buildQR(amount, orderId) {
   return `https://img.vietqr.io/image/${process.env.BANK_BIN}-${process.env.BANK_ACCOUNT}-qr_only.png?amount=${amount}&addInfo=${orderId}`;
+}
+
+async function ensureUser(telegramId, username = "", displayName = "") {
+  let user = await User.findOne({ telegramId });
+  if (!user) {
+    user = await User.create({ telegramId, username, displayName: displayName || username || `User ${telegramId}` });
+  } else {
+    let changed = false;
+    if (username && user.username !== username) {
+      user.username = username;
+      changed = true;
+    }
+    if (displayName && user.displayName !== displayName) {
+      user.displayName = displayName;
+      changed = true;
+    }
+    if (changed) await user.save();
+  }
+  return user;
 }
 
 /* ============================================================
@@ -159,15 +180,12 @@ bot.command("orders", async (ctx) => {
 bot.command("coupon", async (ctx) => {
   const { limited, retryAfter } = checkLimit(ctx.from.id, "coupon");
   if (limited) return ctx.reply(`⏳ Chờ ${formatRetry(retryAfter)}`);
-  const [, code] = ctx.message.text.split(" ");
-  if (!code) return ctx.reply("⚠️ Dùng: /coupon <MÃ>");
-  const cartTotal = ctx.session?.cartTotal || 0;
-  if (!cartTotal) return ctx.reply("🛒 Chọn sản phẩm trước!");
+  const [, code, amountText] = ctx.message.text.split(" ");
+  if (!code || !amountText) return ctx.reply("⚠️ Dùng: /coupon <MÃ> <SỐ_TiỀN_ĐƠN>");
+  const orderTotal = Number(amountText);
+  if (!orderTotal || orderTotal <= 0) return ctx.reply("⚠️ Nhập số tiền đơn hợp lệ!");
   try {
-    const { discount, discountAmount } = await Discount.validate(code, ctx.from.id, cartTotal);
-    if (!ctx.session) ctx.session = {};
-    ctx.session.discountCode   = discount.code;
-    ctx.session.discountAmount = discountAmount;
+    const { discount, discountAmount } = await Discount.validate(code, ctx.from.id, orderTotal);
     ctx.replyWithHTML(`✅ Mã <b>${discount.code}</b> hợp lệ!\n💰 Giảm: <b>${discountAmount.toLocaleString("vi-VN")}đ</b>\n🔢 Còn lại: ${discount.remaining} lượt`);
   } catch (err) { ctx.reply(`❌ ${err.message}`); }
 });
@@ -234,26 +252,45 @@ app.post("/bank-webhook", async (req, res) => {
     const { amount, description } = req.body;
     if (!amount || !description) return res.sendStatus(400);
 
-    const match   = String(description).match(/ORD\d+/i);
-    const orderId = match?.[0]?.toUpperCase();
-    if (!orderId) return res.sendStatus(200);
+    const match = String(description).match(/(ORD|NAP)\d+/i);
+    const code  = match?.[0]?.toUpperCase();
+    if (!code) return res.sendStatus(200);
 
-    const order = await Order.findOne({ orderId, status: "waiting_payment" });
-    if (!order) return res.sendStatus(200);
+    if (code.startsWith("ORD")) {
+      const order = await Order.findOne({ orderId: code, status: "waiting_payment" });
+      if (!order) return res.sendStatus(200);
 
-    if (Math.abs(order.total - amount) > 1000) {
-      await bot.telegram.sendMessage(ADMIN_ID, `⚠️ Sai số tiền!\nĐơn: ${orderId} | Cần: ${order.total} | Nhận: ${amount}`);
-      return res.sendStatus(200);
+      if (Math.abs(order.total - amount) > 1000) {
+        await bot.telegram.sendMessage(ADMIN_ID, `⚠️ Sai số tiền!\nĐơn: ${code} | Cần: ${order.total} | Nhận: ${amount}`);
+        return res.sendStatus(200);
+      }
+
+      await order.confirmPayment(amount);
+      const { failedItems } = await deliver(bot, order);
+      if (failedItems.length) {
+        await bot.telegram.sendMessage(ADMIN_ID, `⚠️ Đơn ${code}: ${failedItems.length} item giao thất bại!`);
+      }
+
+      console.log(`[webhook] ${code} +${amount}đ OK`);
+    } else if (code.startsWith("NAP")) {
+      const topup = await Topup.findOne({ topupId: code, status: "pending" });
+      if (!topup) return res.sendStatus(200);
+
+      if (Math.abs(topup.amount - amount) > 1000) {
+        await bot.telegram.sendMessage(ADMIN_ID, `⚠️ Sai số tiền nạp!\nMã: ${code} | Cần: ${topup.amount} | Nhận: ${amount}`);
+        return res.sendStatus(200);
+      }
+
+      await topup.markPaid();
+      const user = await User.findOrCreate(topup.telegramId, topup.username);
+      await user.addBalance(topup.amount);
+
+      await bot.telegram.sendMessage(topup.telegramId, `✅ Nạp tiền thành công!\n💰 +${topup.amount.toLocaleString("vi-VN")}đ\n💳 Số dư: ${user.balance.toLocaleString("vi-VN")}đ`);
+      await bot.telegram.sendMessage(ADMIN_ID, `💰 <b>Nạp tiền mới!</b>\n👤 @${topup.username || topup.telegramId}\n💵 ${topup.amount.toLocaleString("vi-VN")}đ\n📋 ${topup.topupId}`, { parse_mode: "HTML" });
+
+      console.log(`[webhook] ${code} +${amount}đ OK`);
     }
 
-    await order.confirmPayment(amount);
-
-    const { failedItems } = await deliver(bot, order);
-    if (failedItems.length) {
-      await bot.telegram.sendMessage(ADMIN_ID, `⚠️ Đơn ${orderId}: ${failedItems.length} item giao thất bại!`);
-    }
-
-    console.log(`[webhook] ${orderId} +${amount}đ OK`);
     res.sendStatus(200);
   } catch (err) {
     console.error("[webhook]", err.message);
@@ -302,8 +339,65 @@ app.post("/api/products/:id/stock", adminAuth, async (req, res) => {
    ============================================================ */
 app.post("/api/orders", async (req, res) => {
   try {
-    const order = await Order.create(req.body);
-    res.status(201).json(order);
+    const { telegramId, username, productId, couponCode, paymentMethod = "wallet" } = req.body;
+    if (!telegramId || !productId) return res.status(400).json({ error: "telegramId and productId required" });
+
+    const product = await Product.findById(productId);
+    if (!product) return res.status(404).json({ error: "Sản phẩm không tồn tại" });
+    if (!product.isActive) return res.status(400).json({ error: "Sản phẩm không còn bán" });
+    if (product.autoDeliver && product.stock <= 0) return res.status(400).json({ error: "Sản phẩm hết hàng" });
+
+    let total = product.price;
+    let discountAmount = 0;
+
+    if (couponCode) {
+      try {
+        const result = await Discount.validate(couponCode, telegramId, total);
+        discountAmount = result.discountAmount;
+        total = Math.max(0, total - discountAmount);
+      } catch (err) {
+        return res.status(400).json({ error: err.message });
+      }
+    }
+
+    const user = await ensureUser(telegramId, username);
+
+    if (paymentMethod === "wallet") {
+      if (user.balance < total) return res.status(400).json({ error: "Số dư không đủ!" });
+      await user.deductBalance(total);
+
+      const order = await Order.create({
+        telegramId,
+        username,
+        items: [{ productId: product._id, productName: product.name, price: product.price, quantity: 1 }],
+        total,
+        status: "paid",
+        paymentMethod: "wallet",
+        paidAt: new Date(),
+        paidAmount: total,
+      });
+
+      if (couponCode) {
+        const discount = await Discount.findOne({ code: couponCode.toUpperCase() });
+        if (discount) await discount.applyCode(telegramId, username, order.orderId, product.price);
+      }
+
+      await deliver(bot, order);
+
+      return res.status(201).json({ order, balance: user.balance });
+    } else {
+      const order = await Order.create({
+        telegramId,
+        username,
+        items: [{ productId: product._id, productName: product.name, price: product.price, quantity: 1 }],
+        total,
+        status: "waiting_payment",
+        paymentMethod: "bank_transfer",
+      });
+
+      const qrUrl = buildQR(total, order.orderId);
+      return res.status(201).json({ order, qrUrl, bankAccount: process.env.BANK_ACCOUNT, content: order.orderId });
+    }
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
 
@@ -401,6 +495,94 @@ app.get("/api/stats", adminAuth, async (req, res) => {
       products,
       pendingOrders,
     });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+/* ============================================================
+   REST API — USER & WALLET
+   ============================================================ */
+app.get("/api/me", async (req, res) => {
+  try {
+    const { telegramId } = req.query;
+    if (!telegramId) return res.status(400).json({ error: "telegramId required" });
+
+    const user = await User.findOrCreate(Number(telegramId));
+    const completedOrders = await Order.find({ telegramId: Number(telegramId), status: "completed" });
+
+    const keys = [];
+    for (const order of completedOrders) {
+      for (const item of order.items) {
+        if (item.deliveredContent && item.deliveredContent.length > 0) {
+          keys.push({
+            productName: item.productName,
+            keys: item.deliveredContent,
+            orderId: order.orderId,
+            date: order.deliveredAt || order.createdAt,
+          });
+        }
+      }
+    }
+
+    res.json({
+      telegramId: user.telegramId,
+      username: user.username,
+      displayName: user.displayName || user.username,
+      balance: user.balance,
+      totalTopup: user.totalTopup,
+      totalSpent: user.totalSpent,
+      totalKeys: keys.length,
+      keys,
+    });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+/* ============================================================
+   REST API — TOPUPS
+   ============================================================ */
+app.post("/api/topups", async (req, res) => {
+  try {
+    const { telegramId, username, amount } = req.body;
+    if (!telegramId || !amount || amount <= 0) return res.status(400).json({ error: "Invalid input" });
+
+    const topup = await Topup.create({ telegramId, username, amount });
+    const qrUrl = buildQR(amount, topup.topupId);
+
+    res.json({
+      topupId: topup.topupId,
+      amount: topup.amount,
+      qrUrl,
+      bankAccount: process.env.BANK_ACCOUNT,
+      content: topup.topupId,
+    });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get("/api/topups", async (req, res) => {
+  try {
+    const { telegramId } = req.query;
+    if (!telegramId) return res.status(400).json({ error: "telegramId required" });
+
+    const topups = await Topup.find({ telegramId: Number(telegramId) }).sort({ createdAt: -1 });
+    res.json(topups);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get("/api/leaderboard/topups", async (req, res) => {
+  try {
+    const leaderboard = await Topup.getMonthlyLeaderboard();
+    res.json(leaderboard);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get("/api/feed/recent", async (req, res) => {
+  try {
+    const recentOrders = await Order.find({ status: "completed" }).sort({ completedAt: -1, createdAt: -1 }).limit(10).select("username items createdAt");
+    const feed = recentOrders.map(o => ({
+      username: o.username || "User",
+      productName: o.items[0]?.productName || "Sản phẩm",
+      time: o.createdAt,
+    }));
+    res.json(feed);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
